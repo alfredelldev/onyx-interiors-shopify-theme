@@ -1,0 +1,73 @@
+name: Lighthouse
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/**'
+      - 'blocks/**'
+      - 'config/**'
+      - 'layout/**'
+      - 'locales/**'
+      - 'sections/**'
+      - 'snippets/**'
+      - 'templates/**'
+      - '.github/lighthouse/**'
+      - '.github/workflows/lighthouse.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse
+  cancel-in-progress: true
+
+env:
+  SHOP_STORE: onyx-interiors-hwel88qa.myshopify.com
+  REVIEW_THEME_ID: '167404044450'
+  PRODUCT_HANDLE: ${{ vars.LHCI_PRODUCT_HANDLE }}
+  COLLECTION_HANDLE: ${{ vars.LHCI_COLLECTION_HANDLE || 'all' }}
+  STOREFRONT_PASSWORD: ${{ secrets.STOREFRONT_PASSWORD }}
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check configuration
+        run: |
+          [ -n "$STOREFRONT_PASSWORD" ] || { echo "::error::Add the STOREFRONT_PASSWORD repository secret."; exit 1; }
+          [ -n "$PRODUCT_HANDLE" ] || { echo "::error::Add the LHCI_PRODUCT_HANDLE repository variable."; exit 1; }
+      - name: Wait for the GitHub integration to update the review theme
+        if: github.event_name == 'push'
+        run: sleep 120
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Lighthouse CI
+        run: npm install --global @lhci/cli@0.15.1 puppeteer@24.43.1
+      - name: Collect
+        run: lhci collect --config=.github/lighthouse/lighthouserc.js
+      - name: Save reports
+        if: always()
+        run: lhci upload --config=.github/lighthouse/lighthouserc.js
+      - name: Summarise
+        if: always()
+        run: |
+          [ -f .lighthouseci/reports/manifest.json ] || exit 0
+          node -e '
+            const runs = require("./.lighthouseci/reports/manifest.json").filter((r) => r.isRepresentativeRun);
+            const pct = (v) => (v == null ? "–" : Math.round(v * 100));
+            const rows = runs.map((r) => `| ${new URL(r.url).pathname} | ${pct(r.summary.performance)} | ${pct(r.summary.accessibility)} | ${pct(r.summary["best-practices"])} | ${pct(r.summary.seo)} |`);
+            console.log(["| Page | Performance | Accessibility | Best practices | SEO |", "|---|---|---|---|---|", ...rows].join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          if-no-files-found: ignore
+      - name: Assert
+        run: lhci assert --config=.github/lighthouse/lighthouserc.js

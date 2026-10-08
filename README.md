@@ -23,7 +23,7 @@ onyx-interiors/
 | Client estimates (WBS) | [../onyx-shopify/docs/ai/THEME_DEVELOPMENT_WBS.md](../onyx-shopify/docs/ai/THEME_DEVELOPMENT_WBS.md) |
 | Commands, targets, upstream process | This README |
 | Horizon architecture facts and Onyx component owners | [docs/HORIZON_AUDIT.md](docs/HORIZON_AUDIT.md) |
-| Theme Check CI | [.github/workflows/theme-check.yml](.github/workflows/theme-check.yml) |
+| CI: Theme Check and Lighthouse | [.github/workflows/](.github/workflows/) |
 | Theme implementation state | `HANDOFF.md` (when theme work starts) |
 
 ## Requirements
@@ -75,6 +75,14 @@ Recorded 2026-10-08 on unmodified Horizon 4.2.0 with Shopify CLI 4.8.5: **0 erro
 - `snippets/divider.liquid`: five UnusedDocParam warnings.
 
 CI runs Theme Check on every push and pull request and fails when errors or warnings exceed `MAX_ERRORS`/`MAX_WARNINGS` in the workflow. When offences are fixed, lower those values and update this section; raise them only for a deliberately accepted offence, listed above with its reason. Re-record the baseline after each Horizon update.
+
+## Lighthouse CI
+
+`.github/workflows/lighthouse.yml` audits the review theme (not a fresh upload) after each push to `main` that changes theme files, and on manual runs (**Actions → Lighthouse → Run workflow**). It waits two minutes for the GitHub integration to sync, logs in through the storefront password page, runs Lighthouse three times on the home page, a collection and a product (mobile profile), and uses the median run.
+
+- **Setup:** repository secret `STOREFRONT_PASSWORD`; repository variable `LHCI_PRODUCT_HANDLE` (a representative product with options and images); optional variable `LHCI_COLLECTION_HANDLE` (default `all`). No Shopify app or store write is involved.
+- **Results:** a score table in the run summary and the full HTML reports as the `lighthouse-reports` artifact (private to the repository).
+- **Assertions** (`.github/lighthouse/lighthouserc.js`): accessibility below 90 fails; performance, best practices and SEO below 90 warn. They are provisional until slice 0 records page budgets. SEO scores on a password-protected store can understate launch SEO, because the storefront is not crawlable before launch.
 
 ## Updating from Horizon
 
