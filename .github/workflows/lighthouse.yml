@@ -1,19 +1,10 @@
 name: Lighthouse
 
+# Automatic runs are off until theme development finishes (build plan slice 9). To re-enable, add:
+#   push:
+#     branches: [main]
+#     paths: [assets/**, blocks/**, config/**, layout/**, locales/**, sections/**, snippets/**, templates/**]
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'assets/**'
-      - 'blocks/**'
-      - 'config/**'
-      - 'layout/**'
-      - 'locales/**'
-      - 'sections/**'
-      - 'snippets/**'
-      - 'templates/**'
-      - '.github/lighthouse/**'
-      - '.github/workflows/lighthouse.yml'
   workflow_dispatch:
 
 permissions:

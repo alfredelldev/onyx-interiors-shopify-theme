@@ -78,11 +78,11 @@ CI runs Theme Check on every push and pull request and fails when errors or warn
 
 ## Lighthouse CI
 
-`.github/workflows/lighthouse.yml` audits the review theme (not a fresh upload) after each push to `main` that changes theme files, and on manual runs (**Actions → Lighthouse → Run workflow**). It waits two minutes for the GitHub integration to sync, logs in through the storefront password page, runs Lighthouse three times on the home page, a collection and a product (mobile profile), and uses the median run.
+`.github/workflows/lighthouse.yml` audits the review theme (not a fresh upload). **Automatic runs are off until theme development finishes** (re-enable the push trigger described at the top of the workflow in slice 9); it runs only manually (**Actions → Lighthouse → Run workflow**). On push-triggered runs it waits two minutes for the GitHub integration to sync. It logs in through the storefront password page, selects and confirms the review theme for the browser session (so audited URLs carry no preview redirect), runs Lighthouse three times on the home page, a collection and a product (mobile profile), and uses the median run.
 
 - **Setup:** repository secret `STOREFRONT_PASSWORD`; repository variable `LHCI_PRODUCT_HANDLE` (a representative product with options and images); optional variable `LHCI_COLLECTION_HANDLE` (default `all`). No Shopify app or store write is involved.
 - **Results:** a score table in the run summary and the full HTML reports as the `lighthouse-reports` artifact (private to the repository).
-- **Assertions** (`.github/lighthouse/lighthouserc.js`): accessibility below 90 fails; performance, best practices and SEO below 90 warn. They are provisional until slice 0 records page budgets. SEO scores on a password-protected store can understate launch SEO, because the storefront is not crawlable before launch.
+- **Assertions** (`.github/lighthouse/lighthouserc.js`): accessibility below 85 fails (the stock-Horizon floor on the sample product page); performance, best practices and SEO below 90 warn. They are provisional until slice 0 records page budgets; 90 remains the target. SEO scores on a password-protected store can understate launch SEO, because the storefront is not crawlable before launch.
 
 ## Updating from Horizon
 
