@@ -1,0 +1,41 @@
+name: Theme Check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # Baseline recorded in README (Theme Check baseline). Lower these when offences are fixed; raise only for an accepted offence listed there.
+  MAX_ERRORS: 0
+  MAX_WARNINGS: 6
+
+jobs:
+  theme-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Shopify CLI
+        run: npm install --global @shopify/cli@4.8.5
+      - name: Run Theme Check
+        run: shopify theme check --fail-level crash --output json > theme-check.json
+      - name: Compare with baseline
+        run: |
+          node -e '
+            const files = JSON.parse(require("fs").readFileSync("theme-check.json", "utf8"));
+            let errors = 0, warnings = 0;
+            for (const f of files) {
+              errors += f.errorCount; warnings += f.warningCount;
+              for (const o of f.offenses) console.log(`${o.severity} ${o.check} ${f.path}:${o.start_row + 1} ${o.message}`);
+            }
+            console.log(`errors ${errors}/${process.env.MAX_ERRORS}, warnings ${warnings}/${process.env.MAX_WARNINGS}`);
+            if (errors > +process.env.MAX_ERRORS || warnings > +process.env.MAX_WARNINGS) {
+              console.error("Theme Check offences exceed the recorded baseline.");
+              process.exit(1);
+            }
+          '
