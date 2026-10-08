@@ -32,16 +32,29 @@ onyx-interiors/
 - [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli); commands below checked against 4.8.5.
 - A staff or collaborator account on the development store.
 
-## Store and theme targets
+## Store, themes and release source
 
-Confirm before any connected preview or remote write (WBS 1.6). Theme IDs come from `shopify theme list --store <store>`.
+**Release source: Shopify GitHub integration** (decided 2026-10-08). Each connected branch syncs with one theme:
+
+- A push to a connected branch updates its theme straight away, so pushing is deploying to that theme.
+- Edits on a connected theme (theme editor, code editor, theme apps) are committed back to its branch by Shopify; this cannot be disabled. They mostly touch `config/settings_data.json` and template and section-group JSON, so pull before editing those files.
+- Only theme-structure folders sync; `.github/`, README files and other folders are ignored.
+
+Branch mapping, set up by the developer:
+
+| Branch | Connected theme | Use |
+|---|---|---|
+| `main` | Unpublished review theme | Client review of finished slices |
+| `production` (created for launch) | Live theme | Changes arrive only through an approved release merge |
+
+Never connect the branch that day-to-day work lands on to the live theme. Rollback: revert the release merge on `production` or republish the previous theme; `horizon-4.2.0-base` tags the untouched baseline.
 
 | Target | Value | Use |
 |---|---|---|
-| Development store | _exists (owner's test store with products and images); domain to record_ | `theme dev` and unpublished previews |
+| Development store | _exists (owner's test store with products and images); domain to record_ | `theme dev` and review |
 | Development theme ID | _created by `theme dev`_ | Local live-reload preview |
-| Unpublished review theme ID | _to confirm_ | Shareable review builds |
-| Live theme | _to confirm_ | Never pushed from a local checkout without an authorised release |
+| Review theme ID | _to record (connected to `main`)_ | Shareable review builds |
+| Live theme | _to record (connected to `production` at launch)_ | Publication only with explicit approval |
 | Release and rollback owner | _to confirm_ | Publication and rollback |
 
 ## Local development
@@ -52,13 +65,7 @@ shopify theme dev --store <store>           # development theme with live reload
 shopify theme list --store <store>          # theme IDs and roles
 ```
 
-Pushing to the unpublished review theme, only after reviewing the diff:
-
-```sh
-shopify theme push --store <store> --theme <unpublished-theme-id>
-```
-
-`theme dev` and `theme push` can overwrite `config/settings_data.json` and `templates/*.json` in either direction. Live-theme flags, publishing and deletion are release-only; see [AGENTS.md](AGENTS.md#merchant-configuration-and-store-safety).
+Review builds reach the review theme when the developer pushes `main`; agents never push. `theme dev` and `theme push` can overwrite `config/settings_data.json` and `templates/*.json` in either direction. Live-theme flags, publishing and deletion are release-only; see [AGENTS.md](AGENTS.md#merchant-configuration-and-store-safety).
 
 ## Theme Check baseline
 
