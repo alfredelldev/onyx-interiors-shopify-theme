@@ -51,9 +51,9 @@ Never connect the branch that day-to-day work lands on to the live theme. Rollba
 
 | Target | Value | Use |
 |---|---|---|
-| Development store | _exists (owner's test store with products and images); domain to record_ | `theme dev` and review |
+| Development store | `onyx-interiors-hwel88qa.myshopify.com` (test store with products and images; storefront password-protected) | `theme dev` and review |
 | Development theme ID | _created by `theme dev`_ | Local live-reload preview |
-| Review theme ID | _to record (connected to `main`)_ | Shareable review builds |
+| Review theme ID | `167404044450` (unpublished, connected to `main`) | Shareable review builds |
 | Live theme | _to record (connected to `production` at launch)_ | Publication only with explicit approval |
 | Release and rollback owner | _to confirm_ | Publication and rollback |
 
