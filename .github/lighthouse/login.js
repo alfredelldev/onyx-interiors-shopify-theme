@@ -22,5 +22,9 @@ module.exports = async (browser) => {
     const shown = await currentTheme();
     if (shown !== themeId) throw new Error(`Expected review theme ${themeId}, but the storefront shows ${shown}.`);
   }
+  // disableStorageReset keeps the HTTP cache along with the cookies, and the navigation above fills
+  // it; clear it so every audit is a cold load, as page budgets assume.
+  const session = await page.createCDPSession();
+  await session.send('Network.clearBrowserCache');
   await page.close();
 };
